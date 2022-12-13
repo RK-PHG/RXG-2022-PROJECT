@@ -10,10 +10,14 @@
   "license": "ISC",
   "dependencies": {
     "@octokit/core": "^3.5.1",
+    "all": "^0.0.0",
+    "axios": "^1.2.1",
     "cors": "^2.8.5",
+    "dependencies": "^0.0.1",
     "dotenv": "^10.0.0",
     "express": "^4.17.1",
     "helmet": "^4.6.0",
+    "mongodb": "^4.12.1",
     "mongoose": "^6.1.2",
     "node-fetch": "^3.1.0",
     "xss-clean": "^0.1.1"

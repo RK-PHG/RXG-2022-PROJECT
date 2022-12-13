@@ -1,24 +1,29 @@
 const asyncWrapper = require("../middleware/async");
 const { createCustomError } = require("../errors/custom-error");
-const RepoSchema = require("../models/repo");
-const ObjectId = require("mongodb").ObjectId;
+const RepoSchema = require("../models/repo");  // database shcema
+const ObjectId = require("mongodb").ObjectId;  // Objected Id
+const { Octokit } = require("@octokit/core");  // GitHub API
+const res = require("express/lib/response");   // response
+const { default: axios } = require("axios");
+const { off } = require("../models/repo");
 
-const { Octokit } = require("@octokit/core");
-const res = require("express/lib/response");
 const octokit = new Octokit({
-  auth: `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`,
+  auth: `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`,
 });
 
 const GetMessage = async (req, res) => {
+  console.log("Getting Message...");
   try {
     const repoMessage = await octokit.request("GET /repos/{owner}/{repo}", {
-      owner: req.body.owner,
-      repo: req.body.repoName,
+      owner: req.body.owner,   // owner
+      repo: req.body.repoName, // repoName
     });
     const CreateRepo = await RepoSchema.create({
-      name: repoMessage.data.name,
-      owner: repoMessage.data.owner.login,
-      uploader: req.body.user,
+
+      base: repoMessage,
+      name: repoMessage.data.name,  // name
+      owner: repoMessage.data.owner.login,  // login
+      uploader: req.body.user,  // user
       forks: repoMessage.data.forks,
       stars: repoMessage.data.watchers,
       open_issues: repoMessage.data.open_issues,
@@ -47,12 +52,19 @@ const GetMessage = async (req, res) => {
         repoMessage.data.owner.login,
         repoMessage.data.name
       ),
+      pull_requests: await RepoGetPullRequests(
+        repoMessage.data.owner.login,
+        repoMessage.data.name
+      ),
+
     });
     res.status(201).json({ status: "success!" });
   } catch (err) {
+    console.log(err);
     res.status(404).json(err);
   }
 };
+
 
 const SearchRepoName = async (req, res) => {
   try {
@@ -101,6 +113,7 @@ const DeleteRepo = async (req, res) => {
 };
 
 const RepoGetCommitFrequency = async (owner, name) => {
+  console.log("Getting Commmit...");
   const repoMessage = await octokit.request(
     "GET /repos/{owner}/{repo}/commits",
     {
@@ -125,6 +138,46 @@ const RepoGetCommitFrequency = async (owner, name) => {
     if (NextRepoMessage.data.length == 0) break;
     else repoMessage.data = repoMessage.data.concat(NextRepoMessage.data);
   }
+  var orgs = [];
+  var urls = []
+  try {
+    /** analysis the company info */
+    for (var i = 1; i < repoMessage.data.length; i++) {
+      var url = repoMessage.data[i].author.url;
+      // await octokit.request(
+      //   "GET /users/{login}",
+      //   {
+      //     login: login
+      //   }
+      // ).then(
+      //     res=>{
+      //         if(res.data.company)
+      //           orgs.push(res.data.company.toLowerCase().replace("@","").trim()) 
+      //     });
+      // }
+      urls.push(url);
+    }
+    if (urls.length != 0) {
+      var res = [];
+      try {
+        const resp = await axios.get("http://127.0.0.1:5000/", {
+          params: {
+            urls: JSON.stringify(urls)
+          }
+        });
+        res = resp.data
+
+      }catch(err){
+         res = []   
+      }finally{
+        orgs = res;
+        console.log(orgs)
+      }
+    }
+  } catch (err) { }
+
+  orgs = orgs.filter(res=>res!==null);
+  orgs = orgs.map(org=>org.toLowerCase().trim().replace("@",""));
 
   const x1 = repoMessage.data[0].commit.committer.date;
   const x2 =
@@ -142,7 +195,10 @@ const RepoGetCommitFrequency = async (owner, name) => {
   } else {
     frequency = CountMonthCommit(t1, t2, repoMessage.data);
   }
-  return frequency;
+  return {
+    "orgs": SortCompanyNumbers(orgs),
+    "freq": frequency
+  };
 };
 
 const CountDayCommit = (Msg) => {
@@ -180,6 +236,7 @@ const CountDayCommit = (Msg) => {
 };
 
 const RepoGetIssueFrequency = async (owner, name) => {
+  console.log("Getting Issues...");
   const repoMessage = await octokit.request(
     "GET /repos/{owner}/{repo}/issues",
     {
@@ -205,6 +262,47 @@ const RepoGetIssueFrequency = async (owner, name) => {
     else repoMessage.data = repoMessage.data.concat(NextRepoMessage.data);
   }
 
+  var orgs = [];
+  var urls = []
+  try {
+    /** analysis the company info */
+    for (var i = 1; i < repoMessage.data.length; i++) {
+      var url = repoMessage.data[i].user.url;
+      // await octokit.request(
+      //   "GET /users/{login}",
+      //   {
+      //     login: login
+      //   }
+      // ).then(
+      //     res=>{
+      //         if(res.data.company)
+      //           orgs.push(res.data.company.toLowerCase().replace("@","").trim()) 
+      //     });
+      // }
+      urls.push(url);
+    }
+    if (urls.length != 0) {
+      var res = [];
+      try {
+        const resp = await axios.get("http://127.0.0.1:5000/", {
+          params: {
+            urls: JSON.stringify(urls)
+          }
+        });
+        res = resp.data
+
+      }catch(err){
+         res = []   
+      }finally{
+        orgs = res;
+        console.log(orgs)
+      }
+    }
+  } catch (err) { }
+  
+  orgs = orgs.filter(res=>res!==null);
+  orgs = orgs.map(org=>org.toLowerCase().trim().replace("@",""));
+  
   const x1 = repoMessage.data[0].created_at;
   const x2 = repoMessage.data[repoMessage.data.length - 1].created_at;
   const t1 = TransDate(x1);
@@ -220,7 +318,10 @@ const RepoGetIssueFrequency = async (owner, name) => {
   } else {
     frequency = CountMonthIssue(t1, t2, repoMessage.data);
   }
-  return frequency;
+  return {
+    orgs: SortCompanyNumbers(orgs),
+    freq: frequency,
+  };
 };
 
 const CountDayIssue = (Msg) => {
@@ -330,24 +431,127 @@ const CountMonthIssue = (t1, t2, commitmsg) => {
   return obj;
 };
 
+/** sort comany numbers */
+const SortCompanyNumbers = (comanys) => {
+  var orgs = []
+  var map = new Map();
+  for (var i = 0; i < comanys.length; i++) {
+
+    if (map.has(comanys[i])) {
+      var n = map.get(comanys[i])
+      map.set(comanys[i], n + 1);
+    }
+    else
+      map.set(comanys[i], 1);
+  }
+  orgs = Array.from(map);
+  orgs = orgs.sort(
+    (a, b) => {
+      return b[1] - a[1]
+    }
+  )
+  orgs = orgs.map(com => ({ name: com[0], num: com[1] }))
+  return orgs;
+}
+
+
+/** get pull requests */
+const RepoGetPullRequests = async (owner, name) => {
+
+  /** get 500 pull requests*/
+  const repoMessage = await octokit.request(
+    "GET /repos/{owner}/{repo}/pulls",
+    {
+      owner: owner,
+      repo: name,
+      per_page: 100,
+      page: 1,
+    }
+  );
+
+  if (repoMessage.data.length == 0) return "none";
+  for (var i = 2; i <= 5; i++) {
+    const NextRepoMessage = await octokit.request(
+      "GET /repos/{owner}/{repo}/pulls",
+      {
+        owner: owner,
+        repo: name,
+        per_page: 100,
+        page: i,
+      }
+    );
+    if (NextRepoMessage.data.length == 0) break;
+    else repoMessage.data = repoMessage.data.concat(NextRepoMessage.data);
+  }
+
+  const KeyWords = ["implementation", "future plans",
+    "os support", "code standards", "testability",
+    "robustness", "safety", "security", "performance",
+    "runtime", "optimization", "configuration", "flags",
+    "documentation", "in-code", "off-code", "generic",]
+
+  var design = 0, no_design = 0;
+  var darr = [], no_darr = [];
+  /** do the pull request's analizes */
+  for (var i = 0; i < repoMessage.data.length; i++) {
+    for (var j = 0; j < KeyWords.length; j++) {
+      var body = repoMessage.data[i].body;
+      if (body && body.toLowerCase().indexOf(KeyWords[j]) != -1) {
+        design++;
+        darr.push(repoMessage.data[i]);
+        break;
+      }
+    }
+    if (j >= KeyWords.length) {
+      no_darr.push(repoMessage.data[i]);
+      no_design++;
+    }
+  }
+
+  return {
+    "design": {
+      num: design,
+      arr: darr
+    },
+    "no_design": {
+      num: no_design,
+      arr: no_darr
+    }
+  }
+}
+
+/** get repocode qualities */
+const RepoCodeQuality = async (owner, name) => {
+
+}
+
+
 const RepoGetContributors = async (owner, name) => {
   const repoMessage = await octokit.request(
     "GET /repos/{owner}/{repo}/contributors",
     {
       owner: owner,
       repo: name,
+      page: 1,
+      per_page: 100,
     }
   );
 
+  /** const the contribute's numbers */
+  var contribute_number = 0;
+  for (var i = 0; i < repoMessage.data.length; i++) {
+    contribute_number += repoMessage.data[i].contributions;
+  }
   var result = [];
-  for (
-    var i = 0;
-    i < (repoMessage.data.length < 5 ? repoMessage.data.length : 5);
-    i++
-  ) {
+  var num = 0;
+  for (var i = 0; i < repoMessage.data.length; i++) {
     const userMessage = await octokit.request("GET /users/{username}", {
       username: repoMessage.data[i].login,
     });
+    var active = true;
+    if (num / contribute_number > 0.8)
+      active = false
+
     var ss = {
       name: repoMessage.data[i].login,
       avatar_url: repoMessage.data[i].avatar_url,
@@ -357,8 +561,10 @@ const RepoGetContributors = async (owner, name) => {
       public_gists: userMessage.data.public_gists,
       followers: userMessage.data.followers,
       created_at: userMessage.data.created_at,
+      is_active: active
     };
     result.push(ss);
+    num += repoMessage.data[i].contributions;
   }
   return result;
 };
@@ -385,6 +591,8 @@ const RepoGetLanguage = async (owner, name) => {
   );
   return repoMessage.data;
 };
+
+
 
 module.exports = {
   GetMessage,
