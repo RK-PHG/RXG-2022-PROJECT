@@ -1,6 +1,7 @@
 const RepoSchema = require("../models/repo");  // database shcema
 const ObjectId = require("mongodb").ObjectId;  // Objected Id
 const { Octokit } = require("@octokit/core");  // GitHub API
+const res = require("express/lib/response");
 const {
   RepoGetPullRequests,
   RepoGetCommitFrequency,
@@ -11,29 +12,31 @@ const {
  }  = require("./dash/index")
 
 const octokit = new Octokit({
-  auth: `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`,
+  auth: `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`,
 });
 
-const GetMessage = async (req, res) => {
+
+const AddRepo = async (owner, repo, user)=>{
   console.log("Getting Message...");
+  var newRepo = {}
   try {
     const repoMessage = await octokit.request("GET /repos/{owner}/{repo}", {
-      owner: req.body.owner,   // owner
-      repo: req.body.repoName, // repoName
+      owner: owner,   // owner
+      repo: repo, // repoName
     });
-    const CreateRepo = await RepoSchema.create({
-    //   base: repoMessage,
-    //   name: repoMessage.data.name,  // name
-    //   owner: repoMessage.data.owner.login,  // login
-    //   uploader: req.body.user,  // user
-    //   forks: repoMessage.data.forks,
-    //   stars: repoMessage.data.watchers,
-    //   open_issues: repoMessage.data.open_issues,
-      commit_frequency: await RepoGetCommitFrequency(
-        repoMessage.data.owner.login,
-        repoMessage.data.name,
-        octokit
-      ),
+    newRepo = {
+      // base: repoMessage,
+      // name: repoMessage.data.name,  // name
+      // owner: repoMessage.data.owner.login,  // login
+      // uploader: user,  // user
+      // forks: repoMessage.data.forks,
+      // stars: repoMessage.data.watchers,
+      // open_issues: repoMessage.data.open_issues,
+      // commit_frequency: await RepoGetCommitFrequency(
+      //   repoMessage.data.owner.login,
+      //   repoMessage.data.name,
+      //   octokit
+      // ),
       // issue_frequency: await RepoGetIssueFrequency(
       //   repoMessage.data.owner.login,
       //   repoMessage.data.name,
@@ -59,13 +62,26 @@ const GetMessage = async (req, res) => {
       //   repoMessage.data.name,
       //   octokit
       // ),
-      // pull_requests: await RepoGetPullRequests(
-      //   repoMessage.data.owner.login,
-      //   repoMessage.data.name,
-      //   octokit
-      // ),
+      pull_requests: await RepoGetPullRequests(
+        repoMessage.data.owner.login,
+        repoMessage.data.name,
+        octokit
+      ),
+    };
+  } catch (err) {
+    console.log(err);
+  }
+  return newRepo;
+}
 
-    });
+
+const GetMessage = async (req, res) => {
+  console.log("Getting Message...");
+  try {
+    const newRepo = await AddRepo(req.body.owner,req.body.repoName,req.body.user);
+    console.log(newRepo);
+    // console.log(newRepo);
+    // await RepoSchema.create(newRepo);
     res.status(201).json({ status: "success!" });
   } catch (err) {
     console.log(err);
@@ -123,14 +139,14 @@ const DeleteRepo = async (req, res) => {
 
 const UpdateRepo = async (req,res)=>{
   try {
-    await RepoSchema.deleteOne({ _id: ObjectId(req.body.id) });
-    
+    var oldinfo = await RepoSchema.findOne({ _id: ObjectId(req.body.id) },{name:1,owner:1,uploader:1});
+    const newRepo = await AddRepo(oldinfo.owner,oldinfo.name,oldinfo.uploader);
+    RepoSchema.findOneAndReplace({ _id: ObjectId(req.body.id) },newRepo); 
     res.status(201).json({ msg: "success!" });
   } catch (err) {
     res.status(404).json(err);
   }
 }
-
 
 module.exports = {
   GetMessage,

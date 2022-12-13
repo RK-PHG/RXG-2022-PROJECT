@@ -1,4 +1,31 @@
 /** handle and getting pull requesets */
+const fs = require('fs')
+
+async function KeyWordsReadFile(){
+  const allContents  = fs.readFileSync("keywords.txt",'utf-8');
+  return allContents;
+}
+
+function TypeMatch(input,allContents){
+  
+  const set1 = new Set();
+  var flag = false
+  allContents.split(/\n/).forEach(line =>{
+      var pos = line.lastIndexOf ('-')
+      if(pos>0){
+          var tag = line.substring(0,pos)
+          var type = line.substring(pos+1)
+          if(input.match(tag)){
+              set1.add(type)
+              flag = true
+          }
+      }
+  });
+  if(flag == false){
+      set1.add('no-design')
+  }
+  return set1
+}
 
 const RepoGetPullRequests = async (owner, name, octokit) => {
 
@@ -26,49 +53,36 @@ const RepoGetPullRequests = async (owner, name, octokit) => {
       if (NextRepoMessage.data.length == 0) break;
       else repoMessage.data = repoMessage.data.concat(NextRepoMessage.data);
     }
-  
-    const KeyWords = ["implementation", "future plans",
-      "os support", "code standards", "testability",
-      "robustness", "safety", "security", "performance",
-      "runtime", "optimization", "configuration", "flags",
-      "documentation", "in-code", "off-code", "generic",]
-  
-    var design = 0, no_design = 0;
-    var darr = [], no_darr = [];
-    /** do the pull request's analizes */
-  
-    for (var i=0; i<repoMessage.data.length;i++){
-        var body = repoMessage.data[i].body;
-        // darr.push(body);
-        if(body)
-           fs.appendFile("pull_requests.txt",body,err=>{console.log(err)});
+    
+    var design = {
+       "code":0,
+       "maintainability":0,
+       "testing":0,
+       "robustness":0,
+       "performance":0,
+       "configuration":0,
+       "documentation":0,
+       "clarification":0,
+       "no-design": 0
     }
-  
-    // for (var i = 0; i < repoMessage.data.length; i++) {
-    //   for (var j = 0; j < KeyWords.length; j++) {
-    //     var body = repoMessage.data[i].body;
-    //     if (body && body.toLowerCase().indexOf(KeyWords[j]) != -1) {
-    //       design++;
-    //       darr.push(repoMessage.data[i]);
-    //       break;
-    //     }
-    //   }
-    //   if (j >= KeyWords.length) {
-    //     no_darr.push(repoMessage.data[i]);
-    //     no_design++;
-    //   }
-    // }
-  
-    return {
-      "design": {
-        num: design,
-        arr: darr
-      },
-      "no_design": {
-        num: no_design,
-        arr: no_darr
+   
+    const allContents = await KeyWordsReadFile();
+    /** do the pull request's at
+     * nalizes */  
+    for (var i = 0; i < repoMessage.data.length; i++) {
+        var body = repoMessage.data[i].body;
+        if(body){
+           var types = TypeMatch(body,allContents);
+           for(let i of types){
+              i = i.replace("\r","");
+              var a = design[i];
+              if(!isNaN(a))
+                 design[i] = a+1;
+           }
       }
     }
-  }
+
+    return design
+}
 
 module.exports =  RepoGetPullRequests;

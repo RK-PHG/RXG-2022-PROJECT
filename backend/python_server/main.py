@@ -10,7 +10,7 @@ app = Flask(__name__)
 CORS(app, supports_credentials=True)
 Lock = threading.Lock
 userName = "RK_PHG"
-token = "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"
+token = "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"
 
 def GetURL(arr,url): 
   try:  
@@ -30,7 +30,7 @@ def getUrls(urls):
         Pool.submit(GetURL,result,url,) 
     while True:
       if len(result)==len(urls):
-         break
+         break 
     return result
 
 @app.route("/")

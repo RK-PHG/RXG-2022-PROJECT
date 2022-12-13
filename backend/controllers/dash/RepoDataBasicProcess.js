@@ -29,6 +29,27 @@ const SortCompanyNumbers = (comanys) => {
     orgs = orgs.map(com => ({ name: com[0], num: com[1] }))
     return orgs;
 }
+
+function TypeMatch(input,allContents){
+  const set1 = new Set();
+  var flag = false
+  allContents.split(/\n/).forEach(line =>{
+      var pos = line.indexOf('-')
+      if(pos>0){
+          var tag = line.substring(0,pos)
+          var type = line.substring(pos+1)
+          if(input.match(tag)){
+              set1.add(type)
+              flag = true
+          }
+      }
+  });
+  if(flag == false){
+      set1.add('no-design')
+  }
+  return set1
+}
+
   
 module.exports = {
   TransDate,
