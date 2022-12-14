@@ -12,7 +12,7 @@ const {
  }  = require("./dash/index")
 
 const octokit = new Octokit({
-  auth: `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`,
+  auth: `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`,
 });
 
 
@@ -25,43 +25,43 @@ const AddRepo = async (owner, repo, user)=>{
       repo: repo, // repoName
     });
     newRepo = {
-      // base: repoMessage,
-      // name: repoMessage.data.name,  // name
-      // owner: repoMessage.data.owner.login,  // login
-      // uploader: user,  // user
-      // forks: repoMessage.data.forks,
-      // stars: repoMessage.data.watchers,
-      // open_issues: repoMessage.data.open_issues,
-      // commit_frequency: await RepoGetCommitFrequency(
-      //   repoMessage.data.owner.login,
-      //   repoMessage.data.name,
-      //   octokit
-      // ),
-      // issue_frequency: await RepoGetIssueFrequency(
-      //   repoMessage.data.owner.login,
-      //   repoMessage.data.name,
-      //   octokit
-      // ),
-      // contributors: await RepoGetContributors(
-      //   repoMessage.data.owner.login,
-      //   repoMessage.data.name,
-      //   octokit
-      // ),
-      // timeline: {
-      //   created_at: repoMessage.data.created_at,
-      //   updated_at: repoMessage.data.updated_at,
-      //   pushed_at: repoMessage.data.pushed_at,
-      //   recent_released_at: await RepoGetReleaseTime(
-      //     repoMessage.data.owner.login,
-      //     repoMessage.data.name,
-      //     octokit
-      //   ),
-      // },
-      // language: await RepoGetLanguage(
-      //   repoMessage.data.owner.login,
-      //   repoMessage.data.name,
-      //   octokit
-      // ),
+      base: repoMessage,
+      name: repoMessage.data.name,  // name
+      owner: repoMessage.data.owner.login,  // login
+      uploader: user,  // user
+      forks: repoMessage.data.forks,
+      stars: repoMessage.data.watchers,
+      open_issues: repoMessage.data.open_issues,
+      commit_frequency: await RepoGetCommitFrequency(
+        repoMessage.data.owner.login,
+        repoMessage.data.name,
+        octokit
+      ),
+      issue_frequency: await RepoGetIssueFrequency(
+        repoMessage.data.owner.login,
+        repoMessage.data.name,
+        octokit
+      ),
+      contributors: await RepoGetContributors(
+        repoMessage.data.owner.login,
+        repoMessage.data.name,
+        octokit
+      ),
+      timeline: {
+        created_at: repoMessage.data.created_at,
+        updated_at: repoMessage.data.updated_at,
+        pushed_at: repoMessage.data.pushed_at,
+        recent_released_at: await RepoGetReleaseTime(
+          repoMessage.data.owner.login,
+          repoMessage.data.name,
+          octokit
+        ),
+      },
+      language: await RepoGetLanguage(
+        repoMessage.data.owner.login,
+        repoMessage.data.name,
+        octokit
+      ),
       pull_requests: await RepoGetPullRequests(
         repoMessage.data.owner.login,
         repoMessage.data.name,
@@ -81,7 +81,7 @@ const GetMessage = async (req, res) => {
     const newRepo = await AddRepo(req.body.owner,req.body.repoName,req.body.user);
     console.log(newRepo);
     // console.log(newRepo);
-    // await RepoSchema.create(newRepo);
+    await RepoSchema.create(newRepo);
     res.status(201).json({ status: "success!" });
   } catch (err) {
     console.log(err);

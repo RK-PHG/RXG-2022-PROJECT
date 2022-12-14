@@ -75,21 +75,14 @@ const RepoGetIssueFrequency = async (owner, name,octokit) => {
     const t1 = TransDate(x1);
     const t2 = TransDate(x2);
   
-    var frequency = {};
-    if (t1 - t2 < 2) {
-      frequency = CountDayIssue(repoMessage);
-    } else if (t1 - t2 > 15) {
-      year1 = Math.floor(t1 / 12);
-      year2 = Math.floor(t2 / 12);
-      frequency = CountYearIssue(year1, year2, repoMessage.data);
-    } else {
-      frequency = CountMonthIssue(t1, t2, repoMessage.data);
-    }
     return {
-      orgs: SortCompanyNumbers(orgs),
-      freq: {
-      
-      }
+      "orgs": SortCompanyNumbers(orgs),
+      "freq": {
+          "Day": CountDayIssue(repoMessage),
+          "Month":  CountMonthIssue(t1, t2, repoMessage.data),
+          "Year": CountYearIssue(year1, year2, repoMessage.data),
+          "AllCommits":RecordAllIssuesTime(repoMessage.data),
+       }
     };
   };
   
@@ -133,6 +126,7 @@ const RepoGetIssueFrequency = async (owner, name,octokit) => {
       year0 = Math.floor(TransDate(x.created_at) / 12);
       countNum[year1 - year0] += 1;
     });
+    year1-=2000;
     var obj = {};
     for (var i = year1; i >= year2; i--) {
       nn = i + 2000;
@@ -159,4 +153,14 @@ const RepoGetIssueFrequency = async (owner, name,octokit) => {
     }
     return obj;
   };  
+
+const RecordAllIssuesTime = (cms)=>{
+    var obj = []
+    for(var i=cms.length-1;i>=0;i--){
+        obj.push(cms[i].created_at) 
+    }
+    return obj;
+} 
+
+
 module.exports =  RepoGetIssueFrequency;

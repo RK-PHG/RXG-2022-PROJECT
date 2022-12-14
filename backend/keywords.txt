@@ -91,7 +91,7 @@ related issue-code
 describe the motivation-clarification
 makes it easier-performance
 false tests-testing
-meta specific changes-maintainability
+meta-specific changes-maintainability
 add node support-configuration
 readme-configuration
 incompatible-robustness
@@ -119,10 +119,15 @@ simple source code-code
 generate source code-code
 type checking-maintainability
 code standards-maintainability
+testing notes-documentation
 running tests-testing
 type specifications-clarification
 full text-documentation
+connection file-documentation
+connect file-documentation
+documentation-documentation
 test environment-testing
+sqlite file-documentationz
 generated code-code
 global code-code
 change affects-performance
