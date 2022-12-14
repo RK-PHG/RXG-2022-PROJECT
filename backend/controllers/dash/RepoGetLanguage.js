@@ -1,4 +1,4 @@
-const RepoGetLanguage = async (owner, name,octokit) => {
+const RepoGetLanguage = async (owner, name,octokit) => {        // 代码语言
     const repoMessage = await octokit.request(
       "GET /repos/{owner}/{repo}/languages",
       {

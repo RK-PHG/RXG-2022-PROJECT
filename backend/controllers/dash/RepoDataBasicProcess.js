@@ -10,7 +10,7 @@ const TransDate = (date) => {
 /** sort comany numbers */
 const SortCompanyNumbers = (comanys) => {
     var orgs = []
-    var map = new Map();
+    var map = new Map();                              // key:公司， value:commit数
     for (var i = 0; i < comanys.length; i++) {
   
       if (map.has(comanys[i])) {
@@ -20,8 +20,8 @@ const SortCompanyNumbers = (comanys) => {
       else
         map.set(comanys[i], 1);
     }
-    orgs = Array.from(map);
-    orgs = orgs.sort(
+    orgs = Array.from(map);                           // 提取数组
+    orgs = orgs.sort(                                 // 根据commit数排序
       (a, b) => {
         return b[1] - a[1]
       }

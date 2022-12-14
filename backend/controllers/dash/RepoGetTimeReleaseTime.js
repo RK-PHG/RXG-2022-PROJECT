@@ -1,4 +1,4 @@
-const RepoGetReleaseTime = async (owner, name,octokit) => {
+const RepoGetReleaseTime = async (owner, name,octokit) => {     // 获取release版本时间
     const repoMessage = await octokit.request(
       "GET /repos/{owner}/{repo}/releases",
       {

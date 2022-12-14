@@ -1,4 +1,5 @@
-const asyncWrapper = (fn) => {
+
+const asyncWrapper = (fn) => {                          // 异步函数包装
     return async (req, res, next) => {
         try {
             await fn(req, res, next)

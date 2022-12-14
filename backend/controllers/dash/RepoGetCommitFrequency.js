@@ -15,8 +15,8 @@ const RepoGetCommitFrequency = async (owner, name, octokit) => {
       }
     );
   
-    if (repoMessage.data.length == 0) return { 2021: "0", 2020: "0", 2019: "0" };
-    for (var i = 2; i <=10; i++) {
+    if (repoMessage.data.length == 0) return { 2021: "0", 2020: "0", 2019: "0" };     // 无数据
+    for (var i = 2; ; i++) {                                                    // 获取最多1000条数据
       const NextRepoMessage = await octokit.request(
         "GET /repos/{owner}/{repo}/commits",
         {
@@ -26,14 +26,14 @@ const RepoGetCommitFrequency = async (owner, name, octokit) => {
           page: i,
         }
       );
-      if (NextRepoMessage.data.length == 0) break;
-      else repoMessage.data = repoMessage.data.concat(NextRepoMessage.data);
+      if (NextRepoMessage.data.length == 0) break;                                    // 数据读完则停止获取
+      else repoMessage.data = repoMessage.data.concat(NextRepoMessage.data);          // 各次获取数据合并
     }
     var orgs = [];
     var urls = []
     try {
       /** analysis the company info */
-      for (var i = 1; i < repoMessage.data.length; i++) {
+      for (var i = 1; i < repoMessage.data.length; i++) {  
         var url = repoMessage.data[i].author.url;
         // await octokit.request(
         //   "GET /users/{login}",
@@ -46,12 +46,12 @@ const RepoGetCommitFrequency = async (owner, name, octokit) => {
         //           orgs.push(res.data.company.toLowerCase().replace("@","").trim()) 
         //     });
         // }
-        urls.push(url);
+        urls.push(url);                                                               // 生成commit用户的url列表
       }
       if (urls.length != 0) {
         var res = [];
         try {
-          const resp = await axios.get("http://127.0.0.1:5000/", {
+          const resp = await axios.get("http://127.0.0.1:5000/", {                    // 请求python服务器获取公司信息
             params: {
               urls: JSON.stringify(urls)
             }
@@ -74,7 +74,8 @@ const RepoGetCommitFrequency = async (owner, name, octokit) => {
     const x2 =
       repoMessage.data[repoMessage.data.length - 1].commit.committer.date;
     
-      const t1 = TransDate(x1);
+    // 起止时间
+    const t1 = TransDate(x1);
     const t2 = TransDate(x2);
     year1 = Math.floor(t1 / 12);
     year2 = Math.floor(t2 / 12);

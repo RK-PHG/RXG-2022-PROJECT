@@ -10,7 +10,7 @@ const RepoGetContributors = async (owner, name,octokit) => {
     );
   
     /** const the contribute's numbers */
-    var contribute_number = 0;
+    var contribute_number = 0;                    // 总贡献数
     for (var i = 0; i < repoMessage.data.length; i++) {
       contribute_number += repoMessage.data[i].contributions;
     }
@@ -21,10 +21,10 @@ const RepoGetContributors = async (owner, name,octokit) => {
         username: repoMessage.data[i].login,
       });
       var active = true;
-      if (num / contribute_number > 0.8)
+      if (num / contribute_number > 0.8)          // 后20%非活跃贡献者
         active = false
   
-      var ss = {
+      var ss = {                                  // 单个贡献者信息
         name: repoMessage.data[i].login,
         avatar_url: repoMessage.data[i].avatar_url,
         contributions: repoMessage.data[i].contributions,
@@ -35,7 +35,7 @@ const RepoGetContributors = async (owner, name,octokit) => {
         created_at: userMessage.data.created_at,
         is_active: active
       };
-      result.push(ss);
+      result.push(ss);                            // 合并数据
       num += repoMessage.data[i].contributions;
     }
     return result;

@@ -10,12 +10,12 @@ function TypeMatch(input,allContents){
   
   const set1 = new Set();
   var flag = false
-  allContents.split(/\n/).forEach(line =>{
+  allContents.split(/\n/).forEach(line =>{    // 按行处理
       var pos = line.lastIndexOf ('-')
       if(pos>0){
           var tag = line.substring(0,pos)
           var type = line.substring(pos+1)
-          if(input.match(tag)){
+          if(input.match(tag)){               // 标签匹配
               set1.add(type)
               flag = true
           }
@@ -39,8 +39,8 @@ const RepoGetPullRequests = async (owner, name, octokit) => {
       }
     );
   
-    if (repoMessage.data.length == 0) return "none";
-    for (var i = 2; i <= 5; i++) {
+    if (repoMessage.data.length == 0) return "none";            // 没有pull request
+    for (var i = 2;; i++) {
       const NextRepoMessage = await octokit.request(
         "GET /repos/{owner}/{repo}/pulls",
         {
@@ -51,10 +51,10 @@ const RepoGetPullRequests = async (owner, name, octokit) => {
         }
       );
       if (NextRepoMessage.data.length == 0) break;
-      else repoMessage.data = repoMessage.data.concat(NextRepoMessage.data);
+      else repoMessage.data = repoMessage.data.concat(NextRepoMessage.data);    // 合并数据
     }
     
-    var design = {
+    var design = {                                              // pull request类别
        "code":0,
        "maintainability":0,
        "testing":0,
@@ -66,7 +66,7 @@ const RepoGetPullRequests = async (owner, name, octokit) => {
        "no-design": 0
     }
    
-    const allContents = await KeyWordsReadFile();
+    const allContents = await KeyWordsReadFile();              // 读取得到
     /** do the pull request's at
      * nalizes */  
     for (var i = 0; i < repoMessage.data.length; i++) {

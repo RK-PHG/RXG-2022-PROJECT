@@ -14,8 +14,8 @@ const RepoGetIssueFrequency = async (owner, name,octokit) => {
       }
     );
   
-    if (repoMessage.data.length == 0) return { 2021: "0", 2020: "0", 2019: "0" };
-    for (var i = 2; i <= 5; i++) {
+    if (repoMessage.data.length == 0) return { 2021: "0", 2020: "0", 2019: "0" };     // 空数据
+    for (var i = 2; ; i++) {
       const NextRepoMessage = await octokit.request(
         "GET /repos/{owner}/{repo}/issues",
         {
@@ -25,7 +25,7 @@ const RepoGetIssueFrequency = async (owner, name,octokit) => {
           page: i,
         }
       );
-      if (NextRepoMessage.data.length == 0) break;
+      if (NextRepoMessage.data.length == 0) break;                                    // 读取不到数据即结束
       else repoMessage.data = repoMessage.data.concat(NextRepoMessage.data);
     }
   
@@ -51,7 +51,7 @@ const RepoGetIssueFrequency = async (owner, name,octokit) => {
       if (urls.length != 0) {
         var res = [];
         try {
-          const resp = await axios.get("http://127.0.0.1:5000/", {
+          const resp = await axios.get("http://127.0.0.1:5000/", {          // 向python服务器请求获取相关公司信息
             params: {
               urls: JSON.stringify(urls)
             }
@@ -78,15 +78,15 @@ const RepoGetIssueFrequency = async (owner, name,octokit) => {
     return {
       "orgs": SortCompanyNumbers(orgs),
       "freq": {
-          "Day": CountDayIssue(repoMessage),
-          "Month":  CountMonthIssue(t1, t2, repoMessage.data),
-          "Year": CountYearIssue(year1, year2, repoMessage.data),
-          "AllCommits":RecordAllIssuesTime(repoMessage.data),
+          "Day": CountDayIssue(repoMessage),                        // 按日计
+          "Month":  CountMonthIssue(t1, t2, repoMessage.data),      // 按月计
+          "Year": CountYearIssue(year1, year2, repoMessage.data),   // 按年计
+          "AllCommits":RecordAllIssuesTime(repoMessage.data),       // 各次时间
        }
     };
   };
   
-  const CountDayIssue = (Msg) => {
+  const CountDayIssue = (Msg) => {        // 计算得到各日的issue数
     var order = {};
     var result = {};
   
@@ -120,7 +120,7 @@ const RepoGetIssueFrequency = async (owner, name,octokit) => {
     return answer;
   };
 
-  const CountYearIssue = (year1, year2, commitmsg) => {
+  const CountYearIssue = (year1, year2, commitmsg) => {     // 计算得到每年的issue数
     var countNum = new Array(year1 - year2 + 1).fill(0);
     commitmsg.map((x) => {
       year0 = Math.floor(TransDate(x.created_at) / 12);
@@ -137,7 +137,7 @@ const RepoGetIssueFrequency = async (owner, name,octokit) => {
   };
   
 
-  const CountMonthIssue = (t1, t2, commitmsg) => {
+  const CountMonthIssue = (t1, t2, commitmsg) => {        // 计算得到每月的issue数
     var countNum = new Array(t1 - t2 + 1).fill(0);
     commitmsg.map((x) => {
       t = TransDate(x.created_at);
@@ -154,7 +154,7 @@ const RepoGetIssueFrequency = async (owner, name,octokit) => {
     return obj;
   };  
 
-const RecordAllIssuesTime = (cms)=>{
+const RecordAllIssuesTime = (cms)=>{                    // 每条issue的具体时间
     var obj = []
     for(var i=cms.length-1;i>=0;i--){
         obj.push(cms[i].created_at) 
